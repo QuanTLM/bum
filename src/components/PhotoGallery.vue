@@ -90,13 +90,13 @@ onUnmounted(() => {
     <div class="text-center mb-12 space-y-2.5">
       <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-romantic-100/80 text-romantic-700 text-xs font-medium ring-1 ring-romantic-200/60 shadow-sm">
         <Heart class="w-3.5 h-3.5 fill-romantic-500" />
-        <span>Album ảnh kỷ niệm</span>
+        <span>Góc nhỏ đáng yêu</span>
       </div>
       <h2 class="font-serif text-3xl font-semibold text-romantic-900 tracking-tight">
-        Những Chuyến Đi Cùng Nhau
+        Những Khoảnh Khắc Của Em
       </h2>
       <p class="text-xs text-warm-700/80 max-w-xs mx-auto leading-relaxed font-light">
-        Cuộn để lật từng trang ký ức ngọt ngào mà chúng mình đã cùng nhau đi qua.
+        Mỗi nụ cười của em đều là một khoảnh khắc làm lòng anh rung động.
       </p>
     </div>
 
@@ -121,7 +121,7 @@ onUnmounted(() => {
           <!-- Card Top Bar: Generous Inset to prevent corner clipping (Fix lỗi ở góc) -->
           <div class="flex items-center justify-between px-3 pt-1 pb-3 text-xs text-warm-600 font-medium">
             <span class="font-mono text-[11px] tracking-wider uppercase text-romantic-700 font-semibold truncate max-w-[150px]">
-              Kỷ niệm #0{{ index + 1 }}
+              Khoảnh khắc #0{{ index + 1 }}
             </span>
             <div class="flex items-center gap-1 text-[11px] text-warm-500 font-sans shrink-0">
               <Eye class="w-3.5 h-3.5 text-romantic-500 opacity-80" />
@@ -144,7 +144,7 @@ onUnmounted(() => {
             <img
               v-else
               :src="photo.url"
-              :alt="photo.alt || photo.caption || 'Kỷ niệm'"
+              :alt="photo.alt || photo.caption || 'Khoảnh khắc đáng yêu'"
               @error="handleImageError(photo.id)"
               class="w-full h-full object-cover transition-transform duration-700 ease-smooth group-hover:scale-105"
               loading="lazy"
@@ -158,7 +158,7 @@ onUnmounted(() => {
             </p>
             <div class="flex justify-center items-center gap-1.5 pt-0.5 text-romantic-500 text-xs">
               <Heart class="w-3 h-3 fill-romantic-500" />
-              <span class="font-serif italic text-[11px] text-romantic-700/80">Khoảnh khắc khó phai</span>
+              <span class="font-serif italic text-[11px] text-romantic-700/80">Điều làm anh rung động</span>
               <Heart class="w-3 h-3 fill-romantic-500" />
             </div>
           </div>

@@ -165,7 +165,7 @@ onUnmounted(() => {
         ref="footerCredits"
         class="pt-14 text-[11px] font-mono text-warm-500/80"
       >
-        Made with love for {{ giftConfig.recipientName }} - Forever & Always
+        Dành riêng cho {{ giftConfig.recipientName }} • Chúc em luôn rạng rỡ và hạnh phúc ✨
       </div>
     </div>
   </section>

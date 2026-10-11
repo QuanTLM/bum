@@ -150,13 +150,13 @@ onUnmounted(() => {
     <div class="text-center mb-10 space-y-2">
       <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-romantic-100/80 text-romantic-700 text-xs font-medium ring-1 ring-romantic-200/60 shadow-sm">
         <MailOpen class="w-3.5 h-3.5" />
-        <span>Bức thư từ trái tim</span>
+        <span>Tâm sự chân thành</span>
       </div>
       <h2 class="font-serif text-3xl font-semibold text-romantic-900 tracking-tight">
-        Lá Thư Cho Em
+        Lá Thư Gửi Em
       </h2>
       <p class="text-xs text-warm-700/80 max-w-xs mx-auto leading-relaxed font-light">
-        Những lời chân thành và yêu thương nhất anh muốn gửi gắm đến riêng em.
+        Những tâm tư và rung động chân thành nhất anh muốn gửi đến riêng em.
       </p>
     </div>
 
@@ -231,7 +231,7 @@ onUnmounted(() => {
           <div class="w-8 h-8 rounded-full bg-romantic-100 flex items-center justify-center text-romantic-600 ring-1 ring-romantic-200/50 shadow-sm">
             <Heart class="w-4 h-4 fill-romantic-500" />
           </div>
-          <span class="font-serif italic text-warm-800/80 text-sm">A letter from my heart</span>
+          <span class="font-serif italic text-warm-800/80 text-sm">A note from my heart ✨</span>
         </div>
         <span v-if="giftConfig.loveLetter.date" class="text-[11px] font-mono text-warm-500">
           {{ giftConfig.loveLetter.date }}
