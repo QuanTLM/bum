@@ -4,6 +4,7 @@ import PhotoGallery from '@/components/PhotoGallery.vue'
 import LoveLetter from '@/components/LoveLetter.vue'
 import FinalMessage from '@/components/FinalMessage.vue'
 import AudioPlayer from '@/components/AudioPlayer.vue'
+import RomanticParticles from '@/components/RomanticParticles.vue'
 
 function onExperienceStart() {
   console.log('Romantic experience started.')
@@ -13,6 +14,9 @@ function onExperienceStart() {
 <template>
   <!-- Mobile-optimized frame wrapper (DEC-015, DEC-036, NFR-001) -->
   <div class="min-h-[100dvh] bg-warm-100/70 flex justify-center selection:bg-romantic-200">
+    <!-- Floating romantic petals & interactive touch-heart burst canvas -->
+    <RomanticParticles />
+
     <!-- Single-page continuous scroll container (DEC-012, BR-014) -->
     <main class="w-full max-w-mobile min-h-[100dvh] bg-warm-50 shadow-2xl relative flex flex-col overflow-x-hidden">
       <!-- Fixed film-grain noise texture overlay (high-end visual design) -->

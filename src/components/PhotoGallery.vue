@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { giftConfig } from '@/config/giftData'
-import type { PhotoItem } from '@/types/gift'
 import PhotoLightbox from '@/components/PhotoLightbox.vue'
-import { ImageOff } from '@lucide/vue'
+import { ImageOff, Heart, Eye } from '@lucide/vue'
 import { prefersReducedMotion } from '@/utils/motion'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -20,6 +19,7 @@ const isLightboxOpen = ref(false)
 const selectedPhotoIndex = ref(0)
 const failedImageIds = ref<Set<string>>(new Set())
 const gallerySection = ref<HTMLElement | null>(null)
+const stackContainer = ref<HTMLElement | null>(null)
 
 let ctx: gsap.Context | null = null
 
@@ -33,47 +33,45 @@ function closeLightbox() {
 }
 
 function handleImageError(id: string) {
-  // Graceful fallback for broken image (RULE-010, OQ-018)
   failedImageIds.value.add(id)
 }
 
-function getCardClasses(photo: PhotoItem) {
-  switch (photo.sizeVariant) {
-    case 'tall':
-      return 'col-span-1 row-span-2 aspect-[3/4]'
-    case 'wide':
-      return 'col-span-2 aspect-[16/10]'
-    case 'featured':
-      return 'col-span-2 aspect-[4/5]'
-    case 'normal':
-    default:
-      return 'col-span-1 aspect-square'
-  }
-}
-
 onMounted(() => {
-  if (prefersReducedMotion()) return
+  if (prefersReducedMotion() || !stackContainer.value) return
 
   ctx = gsap.context(() => {
-    // Scroll reveal with GSAP ScrollTrigger.batch for 60fps performance (BR-022, DEC-025, 60fps skill)
-    ScrollTrigger.batch('.gallery-card', {
-      start: 'top 88%',
-      once: true,
-      onEnter: (batch) => {
-        gsap.fromTo(
-          batch,
-          { y: 35, opacity: 0, scale: 0.96 },
-          {
-            y: 0,
-            opacity: 1,
-            scale: 1,
-            duration: 0.75,
-            ease: 'power3.out',
-            stagger: 0.08,
-            overwrite: 'auto',
-          }
-        )
-      },
+    const cardEls = gsap.utils.toArray<HTMLElement>('.stack-card')
+
+    cardEls.forEach((card, i) => {
+      // The last card doesn't need to pin or shrink
+      if (i === cardEls.length - 1) return
+
+      // 1. Pin each card near the top
+      ScrollTrigger.create({
+        trigger: card,
+        start: 'top 85px',
+        endTrigger: cardEls[cardEls.length - 1],
+        end: 'top 85px',
+        pin: true,
+        pinSpacing: false,
+      })
+
+      // 2. Shrink and dim the current card as the next card scrolls up over it
+      const nextCard = cardEls[i + 1]
+      if (nextCard) {
+        gsap.to(card, {
+          scale: 0.90,
+          opacity: 0.35,
+          y: -15,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: nextCard,
+            start: 'top 85%',
+            end: 'top 85px',
+            scrub: true,
+          },
+        })
+      }
     })
   }, gallerySection.value ?? undefined)
 })
@@ -89,59 +87,81 @@ onUnmounted(() => {
     ref="gallerySection"
     class="py-24 px-4 max-w-mobile mx-auto relative"
   >
-    <!-- Section Title & Subtitle (Clean Modern Minimal, No Cluttered Eyebrow Pill) -->
-    <div class="text-center mb-10 space-y-2.5">
+    <!-- Section Title & Subtitle -->
+    <div class="text-center mb-12 space-y-2.5">
+      <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-romantic-100/80 text-romantic-700 text-xs font-medium ring-1 ring-romantic-200/60 shadow-sm">
+        <Heart class="w-3.5 h-3.5 fill-romantic-500" />
+        <span>Album ảnh kỷ niệm</span>
+      </div>
       <h2 class="font-serif text-3xl font-semibold text-romantic-900 tracking-tight">
         Những Chuyến Đi Cùng Nhau
       </h2>
-      <p class="text-xs text-warm-700/80 max-w-xs mx-auto leading-relaxed">
-        Mỗi tấm hình là một mảnh ghép nhỏ lưu giữ nụ cười và kỷ niệm của chúng mình.
+      <p class="text-xs text-warm-700/80 max-w-xs mx-auto leading-relaxed font-light">
+        Cuộn để lật từng trang ký ức ngọt ngào mà chúng mình đã cùng nhau đi qua.
       </p>
     </div>
 
-    <!-- Artistic Masonry / Grid with alternating sizes (DEC-029, FR-006) -->
-    <div class="grid grid-cols-2 gap-3.5 auto-rows-[minmax(140px,auto)]">
+    <!-- Sticky Card Stack Container (User Choice 3.I) -->
+    <div ref="stackContainer" class="relative pb-16 space-y-6">
       <div
         v-for="(photo, index) in sortedPhotos"
         :key="photo.id"
-        tabindex="0"
-        role="button"
-        :aria-label="photo.caption || 'Xem ảnh ' + (index + 1)"
-        @click="openLightbox(index)"
-        @keydown.enter="openLightbox(index)"
-        @keydown.space.prevent="openLightbox(index)"
-        :class="[
-          'gallery-card group relative rounded-2xl overflow-hidden cursor-pointer bg-warm-100 border border-warm-200/70 transition-transform duration-300 ease-smooth active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-romantic-500',
-          getCardClasses(photo)
-        ]"
+        class="stack-card sticky top-[85px] w-full flex items-center justify-center transform-gpu"
       >
-        <!-- Broken image placeholder (RULE-010, OQ-018) -->
+        <!-- Polaroid-Style Art Card Container -->
         <div
-          v-if="failedImageIds.has(photo.id)"
-          class="w-full h-full flex flex-col items-center justify-center p-4 text-center text-warm-800/50 bg-warm-200/50"
+          tabindex="0"
+          role="button"
+          :aria-label="photo.caption || 'Xem ảnh ' + (index + 1)"
+          @click="openLightbox(index)"
+          @keydown.enter="openLightbox(index)"
+          @keydown.space.prevent="openLightbox(index)"
+          class="group relative w-full bg-white/95 rounded-[2rem] p-4.5 sm:p-5 shadow-[0_20px_50px_-15px_rgba(46,43,42,0.18)] border border-warm-200/90 cursor-pointer transition-all duration-300 ease-smooth active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-romantic-500"
         >
-          <ImageOff class="w-8 h-8 text-warm-400 mb-2" />
-          <span class="text-[11px]">Hình ảnh đang cập nhật</span>
-        </div>
+          <!-- Card Top Bar: Memory Counter & Heart Badge -->
+          <div class="flex items-center justify-between pb-3 text-xs text-warm-600 font-medium">
+            <span class="font-mono text-[11px] tracking-wider uppercase text-romantic-700">
+              Kỷ niệm #0{{ index + 1 }}
+            </span>
+            <div class="flex items-center gap-1 text-[11px] text-warm-500 font-sans">
+              <Eye class="w-3.5 h-3.5 text-romantic-500 opacity-80" />
+              <span>Chạm để phóng to</span>
+            </div>
+          </div>
 
-        <!-- Main Image with gentle hover scale (compositor-only) -->
-        <img
-          v-else
-          :src="photo.url"
-          :alt="photo.alt || photo.caption || 'Kỷ niệm'"
-          @error="handleImageError(photo.id)"
-          class="w-full h-full object-cover transition-transform duration-700 ease-smooth group-hover:scale-105"
-          loading="lazy"
-        />
+          <!-- Main Photo Container with 4:3 Aspect Frame -->
+          <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-warm-100 border border-warm-200/60 shadow-inner">
+            <!-- Broken image fallback -->
+            <div
+              v-if="failedImageIds.has(photo.id)"
+              class="w-full h-full flex flex-col items-center justify-center p-4 text-center text-warm-800/50 bg-warm-200/50"
+            >
+              <ImageOff class="w-8 h-8 text-warm-400 mb-2" />
+              <span class="text-[11px]">Hình ảnh đang cập nhật</span>
+            </div>
 
-        <!-- Subtle gradient overlay with caption - revealed on hover/focus (Minimalist Anti-Clutter) -->
-        <div
-          v-if="photo.caption"
-          class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-300 ease-smooth flex flex-col justify-end p-3.5 pointer-events-none"
-        >
-          <p class="text-white text-xs font-normal line-clamp-3 leading-snug drop-shadow-sm font-sans">
-            {{ photo.caption }}
-          </p>
+            <!-- Crisp Real Image with gentle hover scale -->
+            <img
+              v-else
+              :src="photo.url"
+              :alt="photo.alt || photo.caption || 'Kỷ niệm'"
+              @error="handleImageError(photo.id)"
+              class="w-full h-full object-cover transition-transform duration-700 ease-smooth group-hover:scale-105"
+              loading="lazy"
+            />
+          </div>
+
+          <!-- Card Bottom Caption (Handwritten feel in Playfair/Sans) -->
+          <div class="pt-4 px-1 text-center space-y-1">
+            <p v-if="photo.caption" class="text-sm font-medium text-warm-900 leading-snug font-sans">
+              {{ photo.caption }}
+            </p>
+            <div class="flex justify-center items-center gap-1.5 pt-1 text-romantic-500 text-xs">
+              <Heart class="w-3 h-3 fill-romantic-500" />
+              <span class="font-serif italic text-[11px] text-romantic-700/80">Khoảnh khắc khó phai</span>
+              <Heart class="w-3 h-3 fill-romantic-500" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
