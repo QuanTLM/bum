@@ -40,37 +40,29 @@ onMounted(() => {
   if (prefersReducedMotion() || !stackContainer.value) return
 
   ctx = gsap.context(() => {
-    const cardEls = gsap.utils.toArray<HTMLElement>('.stack-card')
+    const cardEls = gsap.utils.toArray<HTMLElement>('.photo-card')
 
-    cardEls.forEach((card, i) => {
-      // The last card doesn't need to pin or fade
-      if (i === cardEls.length - 1) return
-
-      // 1. Pin each card near the top
-      ScrollTrigger.create({
-        trigger: card,
-        start: 'top 90px',
-        endTrigger: cardEls[cardEls.length - 1],
-        end: 'top 90px',
-        pin: true,
-        pinSpacing: false,
-      })
-
-      // 2. Shrink and completely fade out the current card as nextCard arrives to avoid text overlap
-      const nextCard = cardEls[i + 1]
-      if (nextCard) {
-        gsap.to(card, {
-          scale: 0.92,
+    cardEls.forEach((card) => {
+      gsap.fromTo(
+        card,
+        {
           opacity: 0,
-          ease: 'power1.out',
+          y: 40,
+          scale: 0.96,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.8,
+          ease: 'power3.out',
           scrollTrigger: {
-            trigger: nextCard,
-            start: 'top 85%',
-            end: 'top 90px',
-            scrub: true,
+            trigger: card,
+            start: 'top 88%',
+            toggleActions: 'play none none none',
           },
-        })
-      }
+        }
+      )
     })
   }, gallerySection.value ?? undefined)
 })
@@ -100,13 +92,12 @@ onUnmounted(() => {
       </p>
     </div>
 
-    <!-- Sticky Card Stack Container with clean Z-Index stratification -->
-    <div ref="stackContainer" class="relative pb-16 space-y-8">
+    <!-- Beautiful Vertical Photo Stream with generous whitespace and zero overlap -->
+    <div ref="stackContainer" class="relative pb-16 space-y-12 sm:space-y-16">
       <div
         v-for="(photo, index) in sortedPhotos"
         :key="photo.id"
-        :style="{ zIndex: index + 10 }"
-        class="stack-card sticky top-[90px] w-full flex items-center justify-center transform-gpu"
+        class="photo-card w-full flex items-center justify-center transform-gpu"
       >
         <!-- Polaroid-Style Art Card Container with Safe-Padding Corner Architecture -->
         <div
