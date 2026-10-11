@@ -18,13 +18,30 @@ const emit = defineEmits<{
 }>()
 
 const currentIndex = ref(props.initialIndex)
-const imageEl = ref<HTMLElement | null>(null)
+const imageContainer = ref<HTMLElement | null>(null)
 
 watch(
   () => props.initialIndex,
   (val) => {
     currentIndex.value = val
   }
+)
+
+// Preload adjacent photos for instant zero-latency rendering on mobile
+watch(
+  currentIndex,
+  (idx) => {
+    if (typeof window === 'undefined') return
+    if (props.photos[idx + 1]) {
+      const nextImg = new Image()
+      nextImg.src = props.photos[idx + 1].url
+    }
+    if (props.photos[idx - 1]) {
+      const prevImg = new Image()
+      prevImg.src = props.photos[idx - 1].url
+    }
+  },
+  { immediate: true }
 )
 
 // Body scroll lock on open (Review Focus item 3, US-003)
@@ -34,20 +51,13 @@ watch(
     if (typeof document !== 'undefined') {
       document.body.style.overflow = isOpen ? 'hidden' : ''
     }
+    if (isOpen) {
+      dragX.value = 0
+      isAnimating.value = false
+    }
   },
   { immediate: true }
 )
-
-// Smooth crossfade on image change (60fps compositor-only)
-watch(currentIndex, (newIdx, oldIdx) => {
-  if (prefersReducedMotion() || !imageEl.value) return
-  const direction = newIdx > oldIdx ? 1 : -1
-  gsap.fromTo(
-    imageEl.value,
-    { opacity: 0.2, x: direction * 25 },
-    { opacity: 1, x: 0, duration: 0.35, ease: 'power2.out' }
-  )
-})
 
 const currentPhoto = computed(() => props.photos[currentIndex.value])
 const isFirst = computed(() => currentIndex.value === 0)
@@ -56,13 +66,13 @@ const isLast = computed(() => currentIndex.value === props.photos.length - 1)
 // Navigation stopping at boundaries (RULE-009, OQ-016)
 function prevPhoto() {
   if (!isFirst.value) {
-    currentIndex.value--
+    navigateWithSlide(-1)
   }
 }
 
 function nextPhoto() {
   if (!isLast.value) {
-    currentIndex.value++
+    navigateWithSlide(1)
   }
 }
 
@@ -70,31 +80,117 @@ function handleClose() {
   emit('close')
 }
 
-// Touch swipe gestures for mobile (OQ-017)
+// -------------------------------------------------------------
+// Interactive 60fps Native Touch Drag & Spring Physics
+// -------------------------------------------------------------
 const touchStartX = ref(0)
-const touchEndX = ref(0)
-const minSwipeDistance = 45
+const touchStartY = ref(0)
+const dragX = ref(0)
+const isDragging = ref(false)
+const isAnimating = ref(false)
 
 function onTouchStart(e: TouchEvent) {
-  touchStartX.value = e.changedTouches[0].screenX
+  if (isAnimating.value || e.touches.length !== 1) return
+  touchStartX.value = e.touches[0].clientX
+  touchStartY.value = e.touches[0].clientY
+  isDragging.value = true
+  dragX.value = 0
 }
 
-function onTouchEnd(e: TouchEvent) {
-  touchEndX.value = e.changedTouches[0].screenX
-  handleSwipeGesture()
-}
+function onTouchMove(e: TouchEvent) {
+  if (!isDragging.value || isAnimating.value || e.touches.length !== 1) return
+  const currentX = e.touches[0].clientX
+  const currentY = e.touches[0].clientY
 
-function handleSwipeGesture() {
-  const diff = touchEndX.value - touchStartX.value
-  if (Math.abs(diff) < minSwipeDistance) return
+  let diffX = currentX - touchStartX.value
+  const diffY = Math.abs(currentY - touchStartY.value)
 
-  if (diff > 0) {
-    // Swiped right -> Previous
-    prevPhoto()
-  } else {
-    // Swiped left -> Next
-    nextPhoto()
+  // Ignore accidental vertical scroll movements
+  if (diffY > Math.abs(diffX) && Math.abs(diffX) < 12) {
+    return
   }
+
+  // Rubber-band resistance at boundaries
+  if ((isFirst.value && diffX > 0) || (isLast.value && diffX < 0)) {
+    diffX *= 0.25
+  }
+
+  dragX.value = diffX
+}
+
+function onTouchEnd() {
+  if (!isDragging.value || isAnimating.value) return
+  isDragging.value = false
+
+  const threshold = 50
+  if (dragX.value < -threshold && !isLast.value) {
+    // Swiped left sufficiently -> Next photo
+    navigateWithSlide(1)
+  } else if (dragX.value > threshold && !isFirst.value) {
+    // Swiped right sufficiently -> Previous photo
+    navigateWithSlide(-1)
+  } else {
+    // Spring back to center smoothly
+    if (prefersReducedMotion() || !imageContainer.value) {
+      dragX.value = 0
+      return
+    }
+    isAnimating.value = true
+    gsap.to(imageContainer.value, {
+      x: 0,
+      opacity: 1,
+      duration: 0.35,
+      ease: 'elastic.out(1, 0.75)',
+      onComplete: () => {
+        dragX.value = 0
+        isAnimating.value = false
+      },
+    })
+  }
+}
+
+function navigateWithSlide(direction: number) {
+  if (isAnimating.value) return
+
+  if (prefersReducedMotion() || !imageContainer.value) {
+    if (direction > 0 && !isLast.value) currentIndex.value++
+    if (direction < 0 && !isFirst.value) currentIndex.value--
+    dragX.value = 0
+    return
+  }
+
+  isAnimating.value = true
+  const flyOutX = direction > 0 ? -window.innerWidth * 0.45 : window.innerWidth * 0.45
+
+  // 1. Slide current photo out fluidly
+  gsap.to(imageContainer.value, {
+    x: flyOutX,
+    opacity: 0.2,
+    duration: 0.22,
+    ease: 'power2.in',
+    onComplete: () => {
+      // 2. Change photo index
+      if (direction > 0) currentIndex.value++
+      else currentIndex.value--
+
+      // 3. Slide new photo in from the other side
+      const flyInX = direction > 0 ? window.innerWidth * 0.45 : -window.innerWidth * 0.45
+      gsap.fromTo(
+        imageContainer.value,
+        { x: flyInX, opacity: 0.2 },
+        {
+          x: 0,
+          opacity: 1,
+          duration: 0.36,
+          ease: 'power3.out',
+          onComplete: () => {
+            dragX.value = 0
+            isAnimating.value = false
+          },
+        }
+      )
+    },
+  })
 }
 
 // Keyboard navigation
@@ -132,6 +228,7 @@ onUnmounted(() => {
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md px-4 py-8 touch-none select-none"
         @click.self="handleClose"
         @touchstart="onTouchStart"
+        @touchmove="onTouchMove"
         @touchend="onTouchEnd"
         role="dialog"
         aria-modal="true"
@@ -153,16 +250,21 @@ onUnmounted(() => {
           </button>
         </div>
 
-        <!-- Main Photo container -->
-        <div class="relative max-w-mobile w-full flex flex-col items-center">
+        <!-- Main Photo container with real-time gesture translate -->
+        <div
+          ref="imageContainer"
+          :style="{
+            transform: isDragging ? `translate3d(${dragX}px, 0, 0)` : undefined,
+            transition: isDragging ? 'none' : undefined,
+          }"
+          class="relative max-w-mobile w-full flex flex-col items-center transform-gpu will-change-transform"
+        >
           <div class="relative w-full max-h-[70vh] flex items-center justify-center overflow-hidden rounded-2xl shadow-2xl">
             <img
-              ref="imageEl"
-              :key="currentPhoto.id"
               :src="currentPhoto.url"
               :alt="currentPhoto.alt || currentPhoto.caption || 'Kỷ niệm'"
               class="max-w-full max-h-[70vh] object-contain rounded-2xl select-none"
-              loading="lazy"
+              loading="eager"
             />
           </div>
 

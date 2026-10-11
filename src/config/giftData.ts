@@ -4,7 +4,7 @@ import type { GiftConfig } from '@/types/gift'
  * ============================================================================
  * CẤU HÌNH DỮ LIỆU TĨNH CHO "WEBSITE FOR MY LOVE" (STATIC DATA CONFIG)
  * ============================================================================
- * Dữ liệu kỷ niệm thực tế kết hợp ảnh và nhạc nền từ Creator.
+ * Dữ liệu kỷ niệm thực tế kết hợp toàn bộ ảnh và nhạc nền từ Creator.
  * ============================================================================
  */
 
@@ -69,6 +69,15 @@ export const giftConfig: GiftConfig = {
       aspect: 'landscape',
       sizeVariant: 'wide',
       displayOrder: 6,
+    },
+    {
+      id: 'photo-7',
+      url: '/photos/frame_001.png',
+      caption: 'Mỗi ánh nhìn, mỗi nụ cười đều là tình yêu',
+      alt: 'Khung hình kỷ niệm tuyệt đẹp',
+      aspect: 'portrait',
+      sizeVariant: 'featured',
+      displayOrder: 7,
     },
   ],
 

@@ -108,7 +108,7 @@ onUnmounted(() => {
         :style="{ zIndex: index + 10 }"
         class="stack-card sticky top-[90px] w-full flex items-center justify-center transform-gpu"
       >
-        <!-- Polaroid-Style Art Card Container with Solid Opaque White Background -->
+        <!-- Polaroid-Style Art Card Container with Safe-Padding Corner Architecture -->
         <div
           tabindex="0"
           role="button"
@@ -118,12 +118,12 @@ onUnmounted(() => {
           @keydown.space.prevent="openLightbox(index)"
           class="group relative w-full bg-white rounded-[2rem] p-4.5 sm:p-5 shadow-[0_20px_50px_-15px_rgba(46,43,42,0.22)] border border-warm-200 cursor-pointer transition-all duration-300 ease-smooth active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-romantic-500 overflow-hidden"
         >
-          <!-- Card Top Bar: Memory Counter & Heart Badge -->
-          <div class="flex items-center justify-between pb-3 text-xs text-warm-600 font-medium">
-            <span class="font-mono text-[11px] tracking-wider uppercase text-romantic-700 font-semibold">
+          <!-- Card Top Bar: Generous Inset to prevent corner clipping (Fix lỗi ở góc) -->
+          <div class="flex items-center justify-between px-3 pt-1 pb-3 text-xs text-warm-600 font-medium">
+            <span class="font-mono text-[11px] tracking-wider uppercase text-romantic-700 font-semibold truncate max-w-[150px]">
               Kỷ niệm #0{{ index + 1 }}
             </span>
-            <div class="flex items-center gap-1 text-[11px] text-warm-500 font-sans">
+            <div class="flex items-center gap-1 text-[11px] text-warm-500 font-sans shrink-0">
               <Eye class="w-3.5 h-3.5 text-romantic-500 opacity-80" />
               <span>Chạm để phóng to</span>
             </div>
@@ -151,8 +151,8 @@ onUnmounted(() => {
             />
           </div>
 
-          <!-- Card Bottom Caption (Handwritten feel in Playfair/Sans) -->
-          <div class="pt-4 px-1 text-center space-y-1.5 min-h-[64px] flex flex-col justify-center">
+          <!-- Card Bottom Caption -->
+          <div class="pt-4 px-2 text-center space-y-1.5 min-h-[64px] flex flex-col justify-center">
             <p v-if="photo.caption" class="text-sm font-medium text-warm-900 leading-snug font-sans">
               {{ photo.caption }}
             </p>
