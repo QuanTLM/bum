@@ -34,17 +34,7 @@ onMounted(() => {
       ease: 'sine.inOut',
     })
 
-    // 2. Heart breathing loop
-    gsap.to(heartIcon.value, {
-      scale: 1.08,
-      duration: 2,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut',
-      delay: 1,
-    })
-
-    // 3. Master reveal timeline with ScrollTrigger (DEC-022, FR-022)
+    // 2. Master reveal timeline with ScrollTrigger (DEC-022, FR-022)
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: sectionRef.value,
@@ -132,13 +122,13 @@ onUnmounted(() => {
 
     <!-- Final Message Content (DATA-004, FR-021, FR-022) -->
     <div class="relative z-10 flex flex-col items-center space-y-6">
-      <!-- Heart icon in nested pill (replaces generic animate-pulse) -->
+      <!-- Heart icon in nested pill with active heartbeat pulse -->
       <div
         ref="heartIcon"
         class="p-2 rounded-full bg-romantic-100/70 ring-1 ring-romantic-200/60 shadow-romantic-soft"
       >
         <div class="w-14 h-14 rounded-full bg-romantic-100 flex items-center justify-center text-romantic-600 shadow-inner">
-          <Heart class="w-7 h-7 fill-romantic-500 text-romantic-600" />
+          <Heart class="w-7 h-7 fill-romantic-500 text-romantic-600 animate-heartbeat" />
         </div>
       </div>
 

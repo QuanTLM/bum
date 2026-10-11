@@ -43,31 +43,30 @@ onMounted(() => {
     const cardEls = gsap.utils.toArray<HTMLElement>('.stack-card')
 
     cardEls.forEach((card, i) => {
-      // The last card doesn't need to pin or shrink
+      // The last card doesn't need to pin or fade
       if (i === cardEls.length - 1) return
 
       // 1. Pin each card near the top
       ScrollTrigger.create({
         trigger: card,
-        start: 'top 85px',
+        start: 'top 90px',
         endTrigger: cardEls[cardEls.length - 1],
-        end: 'top 85px',
+        end: 'top 90px',
         pin: true,
         pinSpacing: false,
       })
 
-      // 2. Shrink and dim the current card as the next card scrolls up over it
+      // 2. Shrink and completely fade out the current card as nextCard arrives to avoid text overlap
       const nextCard = cardEls[i + 1]
       if (nextCard) {
         gsap.to(card, {
-          scale: 0.90,
-          opacity: 0.35,
-          y: -15,
-          ease: 'none',
+          scale: 0.92,
+          opacity: 0,
+          ease: 'power1.out',
           scrollTrigger: {
             trigger: nextCard,
             start: 'top 85%',
-            end: 'top 85px',
+            end: 'top 90px',
             scrub: true,
           },
         })
@@ -101,14 +100,15 @@ onUnmounted(() => {
       </p>
     </div>
 
-    <!-- Sticky Card Stack Container (User Choice 3.I) -->
-    <div ref="stackContainer" class="relative pb-16 space-y-6">
+    <!-- Sticky Card Stack Container with clean Z-Index stratification -->
+    <div ref="stackContainer" class="relative pb-16 space-y-8">
       <div
         v-for="(photo, index) in sortedPhotos"
         :key="photo.id"
-        class="stack-card sticky top-[85px] w-full flex items-center justify-center transform-gpu"
+        :style="{ zIndex: index + 10 }"
+        class="stack-card sticky top-[90px] w-full flex items-center justify-center transform-gpu"
       >
-        <!-- Polaroid-Style Art Card Container -->
+        <!-- Polaroid-Style Art Card Container with Solid Opaque White Background -->
         <div
           tabindex="0"
           role="button"
@@ -116,11 +116,11 @@ onUnmounted(() => {
           @click="openLightbox(index)"
           @keydown.enter="openLightbox(index)"
           @keydown.space.prevent="openLightbox(index)"
-          class="group relative w-full bg-white/95 rounded-[2rem] p-4.5 sm:p-5 shadow-[0_20px_50px_-15px_rgba(46,43,42,0.18)] border border-warm-200/90 cursor-pointer transition-all duration-300 ease-smooth active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-romantic-500"
+          class="group relative w-full bg-white rounded-[2rem] p-4.5 sm:p-5 shadow-[0_20px_50px_-15px_rgba(46,43,42,0.22)] border border-warm-200 cursor-pointer transition-all duration-300 ease-smooth active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-romantic-500 overflow-hidden"
         >
           <!-- Card Top Bar: Memory Counter & Heart Badge -->
           <div class="flex items-center justify-between pb-3 text-xs text-warm-600 font-medium">
-            <span class="font-mono text-[11px] tracking-wider uppercase text-romantic-700">
+            <span class="font-mono text-[11px] tracking-wider uppercase text-romantic-700 font-semibold">
               Kỷ niệm #0{{ index + 1 }}
             </span>
             <div class="flex items-center gap-1 text-[11px] text-warm-500 font-sans">
@@ -152,11 +152,11 @@ onUnmounted(() => {
           </div>
 
           <!-- Card Bottom Caption (Handwritten feel in Playfair/Sans) -->
-          <div class="pt-4 px-1 text-center space-y-1">
+          <div class="pt-4 px-1 text-center space-y-1.5 min-h-[64px] flex flex-col justify-center">
             <p v-if="photo.caption" class="text-sm font-medium text-warm-900 leading-snug font-sans">
               {{ photo.caption }}
             </p>
-            <div class="flex justify-center items-center gap-1.5 pt-1 text-romantic-500 text-xs">
+            <div class="flex justify-center items-center gap-1.5 pt-0.5 text-romantic-500 text-xs">
               <Heart class="w-3 h-3 fill-romantic-500" />
               <span class="font-serif italic text-[11px] text-romantic-700/80">Khoảnh khắc khó phai</span>
               <Heart class="w-3 h-3 fill-romantic-500" />

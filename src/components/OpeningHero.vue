@@ -55,7 +55,7 @@ onMounted(() => {
     // Master Hero entrance timeline (BR-027, DEC-031)
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
 
-    // 1. Central Heart icon emergence with bounce
+    // 1. Central Heart icon container emergence with elastic pop
     tl.fromTo(
       heartIcon.value,
       { scale: 0, opacity: 0, rotation: -15 },
@@ -103,16 +103,6 @@ onMounted(() => {
       { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.7)' },
       '-=0.3'
     )
-
-    // Continuous gentle compositor-only breathing for heart (replaces generic animate-pulse)
-    gsap.to(heartIcon.value, {
-      scale: 1.05,
-      duration: 2,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut',
-      delay: 1.2,
-    })
   }, heroContainer.value ?? undefined)
 })
 
@@ -155,13 +145,13 @@ async function handleStart() {
 
     <!-- Central Hero Content -->
     <div class="flex flex-col items-center max-w-xs space-y-7 z-10">
-      <!-- Heart Icon in Double-Bezel nested container (high-end visual design) -->
+      <!-- Heart Icon in Double-Bezel nested container with active heartbeat pulse -->
       <div
         ref="heartIcon"
         class="p-2 rounded-full bg-romantic-100/60 ring-1 ring-romantic-200/50 shadow-romantic-soft"
       >
         <div class="w-18 h-18 rounded-full bg-gradient-to-tr from-romantic-300 to-romantic-100 flex items-center justify-center shadow-inner">
-          <Heart class="w-9 h-9 text-romantic-600 fill-romantic-500" />
+          <Heart class="w-9 h-9 text-romantic-600 fill-romantic-500 animate-heartbeat" />
         </div>
       </div>
 
@@ -181,7 +171,7 @@ async function handleStart() {
         </h1>
       </div>
 
-      <!-- Tagline / Subtitle (max 20 words per design-taste standard) -->
+      <!-- Tagline / Subtitle -->
       <p
         ref="taglineText"
         class="text-sm text-warm-800/80 leading-relaxed font-light px-2"
