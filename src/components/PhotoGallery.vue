@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { giftConfig } from '@/config/giftData'
 import type { PhotoItem } from '@/types/gift'
 import PhotoLightbox from '@/components/PhotoLightbox.vue'
-import { Camera, ImageOff, Heart } from '@lucide/vue'
+import { ImageOff } from '@lucide/vue'
+import { prefersReducedMotion } from '@/utils/motion'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -18,6 +19,9 @@ const sortedPhotos = computed(() => {
 const isLightboxOpen = ref(false)
 const selectedPhotoIndex = ref(0)
 const failedImageIds = ref<Set<string>>(new Set())
+const gallerySection = ref<HTMLElement | null>(null)
+
+let ctx: gsap.Context | null = null
 
 function openLightbox(index: number) {
   selectedPhotoIndex.value = index
@@ -48,43 +52,49 @@ function getCardClasses(photo: PhotoItem) {
 }
 
 onMounted(() => {
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  if (prefersReduced) return
+  if (prefersReducedMotion()) return
 
-  // Scroll reveal with GSAP ScrollTrigger (BR-022, DEC-025)
-  const cards = document.querySelectorAll('.gallery-card')
-  cards.forEach((card) => {
-    gsap.fromTo(
-      card,
-      { y: 35, opacity: 0 },
-      {
-        y: 0,
-        opacity: 1,
-        duration: 0.8,
-        ease: 'power2.out',
-        scrollTrigger: {
-          trigger: card,
-          start: 'top 88%',
-          toggleActions: 'play none none none',
-        },
-      }
-    )
-  })
+  ctx = gsap.context(() => {
+    // Scroll reveal with GSAP ScrollTrigger.batch for 60fps performance (BR-022, DEC-025, 60fps skill)
+    ScrollTrigger.batch('.gallery-card', {
+      start: 'top 88%',
+      once: true,
+      onEnter: (batch) => {
+        gsap.fromTo(
+          batch,
+          { y: 35, opacity: 0, scale: 0.96 },
+          {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            duration: 0.75,
+            ease: 'power3.out',
+            stagger: 0.08,
+            overwrite: 'auto',
+          }
+        )
+      },
+    })
+  }, gallerySection.value ?? undefined)
+})
+
+onUnmounted(() => {
+  ctx?.revert()
 })
 </script>
 
 <template>
-  <section id="gallery-section" class="py-16 px-4 max-w-mobile mx-auto">
-    <!-- Section Title & Subtitle -->
-    <div class="text-center mb-10 space-y-2">
-      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-romantic-100 text-romantic-700 text-xs font-medium">
-        <Camera class="w-3.5 h-3.5" />
-        <span>Khoảnh khắc kỷ niệm</span>
-      </div>
-      <h2 class="font-serif text-3xl font-semibold text-romantic-900">
+  <section
+    id="gallery-section"
+    ref="gallerySection"
+    class="py-24 px-4 max-w-mobile mx-auto relative"
+  >
+    <!-- Section Title & Subtitle (Clean Modern Minimal, No Cluttered Eyebrow Pill) -->
+    <div class="text-center mb-10 space-y-2.5">
+      <h2 class="font-serif text-3xl font-semibold text-romantic-900 tracking-tight">
         Những Chuyến Đi Cùng Nhau
       </h2>
-      <p class="text-xs text-warm-800/70 max-w-xs mx-auto">
+      <p class="text-xs text-warm-700/80 max-w-xs mx-auto leading-relaxed">
         Mỗi tấm hình là một mảnh ghép nhỏ lưu giữ nụ cười và kỷ niệm của chúng mình.
       </p>
     </div>
@@ -94,9 +104,14 @@ onMounted(() => {
       <div
         v-for="(photo, index) in sortedPhotos"
         :key="photo.id"
+        tabindex="0"
+        role="button"
+        :aria-label="photo.caption || 'Xem ảnh ' + (index + 1)"
         @click="openLightbox(index)"
+        @keydown.enter="openLightbox(index)"
+        @keydown.space.prevent="openLightbox(index)"
         :class="[
-          'gallery-card group relative rounded-2xl overflow-hidden cursor-pointer shadow-sm bg-warm-100 border border-warm-200/60 transition-transform duration-300 active:scale-[0.98]',
+          'gallery-card group relative rounded-2xl overflow-hidden cursor-pointer bg-warm-100 border border-warm-200/70 transition-transform duration-300 ease-smooth active:scale-[0.98] outline-none focus-visible:ring-2 focus-visible:ring-romantic-500',
           getCardClasses(photo)
         ]"
       >
@@ -109,23 +124,22 @@ onMounted(() => {
           <span class="text-[11px]">Hình ảnh đang cập nhật</span>
         </div>
 
-        <!-- Main Image -->
+        <!-- Main Image with gentle hover scale (compositor-only) -->
         <img
           v-else
           :src="photo.url"
           :alt="photo.alt || photo.caption || 'Kỷ niệm'"
           @error="handleImageError(photo.id)"
-          class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          class="w-full h-full object-cover transition-transform duration-700 ease-smooth group-hover:scale-105"
           loading="lazy"
         />
 
-        <!-- Subtle gradient overlay with caption on hover/tap -->
-        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-90 transition-opacity flex flex-col justify-end p-3">
-          <div class="flex items-center gap-1 text-white/90 text-[10px] font-mono mb-0.5">
-            <Heart class="w-2.5 h-2.5 fill-romantic-400 text-romantic-400" />
-            <span>#{{ index + 1 }}</span>
-          </div>
-          <p v-if="photo.caption" class="text-white text-xs font-normal line-clamp-2 leading-snug drop-shadow-sm font-sans">
+        <!-- Subtle gradient overlay with caption - revealed on hover/focus (Minimalist Anti-Clutter) -->
+        <div
+          v-if="photo.caption"
+          class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-300 ease-smooth flex flex-col justify-end p-3.5 pointer-events-none"
+        >
+          <p class="text-white text-xs font-normal line-clamp-3 leading-snug drop-shadow-sm font-sans">
             {{ photo.caption }}
           </p>
         </div>
