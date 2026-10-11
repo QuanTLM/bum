@@ -52,6 +52,24 @@ export const giftConfig: GiftConfig = {
       sizeVariant: 'normal',
       displayOrder: 4,
     },
+    {
+      id: 'photo-5',
+      url: '/photos/494259938_666830245969281_5523388864940736100_n.jpg',
+      caption: 'Mỗi kỷ niệm bên em là một thước phim đẹp đẽ',
+      alt: 'Thước phim kỷ niệm',
+      aspect: 'portrait',
+      sizeVariant: 'tall',
+      displayOrder: 5,
+    },
+    {
+      id: 'photo-6',
+      url: '/photos/505406645_695741886411450_3087407453953589280_n.jpg',
+      caption: 'Nguyện cùng em đi qua bao mùa xuân hạ thu đông',
+      alt: 'Cùng nhau đi qua năm tháng',
+      aspect: 'landscape',
+      sizeVariant: 'wide',
+      displayOrder: 6,
+    },
   ],
 
   // --- 3. BỨC THƯ TÌNH CẢM (FEAT-003, US-004) ---
