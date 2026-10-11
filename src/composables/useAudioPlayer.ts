@@ -37,7 +37,7 @@ function initAudio() {
   })
 }
 
-async function startPlayback(): Promise<boolean> {
+async function startPlayback(isAutoAttempt: boolean = false): Promise<boolean> {
   initAudio()
   isUserInitiated.value = true
   if (!audioElement) return false
@@ -49,8 +49,10 @@ async function startPlayback(): Promise<boolean> {
     return true
   } catch (err: any) {
     console.warn('Autoplay prevented or audio source failed (BR-032, US-008):', err)
-    hasError.value = true
-    errorMessage.value = 'Âm thanh bị chặn bởi trình duyệt hoặc mạng. Bấm nút nhạc để thử lại!'
+    if (!isAutoAttempt) {
+      hasError.value = true
+      errorMessage.value = 'Âm thanh bị chặn bởi trình duyệt hoặc mạng. Bấm nút nhạc để thử lại!'
+    }
     isPlaying.value = false
     return false
   }

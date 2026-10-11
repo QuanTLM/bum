@@ -1,14 +1,46 @@
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue'
 import OpeningHero from '@/components/OpeningHero.vue'
 import PhotoGallery from '@/components/PhotoGallery.vue'
 import LoveLetter from '@/components/LoveLetter.vue'
 import FinalMessage from '@/components/FinalMessage.vue'
 import AudioPlayer from '@/components/AudioPlayer.vue'
 import RomanticParticles from '@/components/RomanticParticles.vue'
+import { useAudioPlayer } from '@/composables/useAudioPlayer'
+
+const { startPlayback, isPlaying } = useAudioPlayer()
+
+let autoPlayTimer: ReturnType<typeof setTimeout> | null = null
 
 function onExperienceStart() {
   console.log('Romantic experience started.')
 }
+
+onMounted(() => {
+  // Autoplay background music after 1s (User requirement)
+  autoPlayTimer = setTimeout(async () => {
+    const success = await startPlayback(true)
+    if (!success) {
+      // If browser policy blocks unprompted audio, resume immediately on very first touch/click
+      const resumeOnInteract = async () => {
+        if (!isPlaying.value) {
+          await startPlayback(false)
+        }
+        window.removeEventListener('pointerdown', resumeOnInteract)
+        window.removeEventListener('touchstart', resumeOnInteract)
+      }
+      window.addEventListener('pointerdown', resumeOnInteract, { once: true, passive: true })
+      window.addEventListener('touchstart', resumeOnInteract, { once: true, passive: true })
+    }
+  }, 1000)
+})
+
+onUnmounted(() => {
+  if (autoPlayTimer) {
+    clearTimeout(autoPlayTimer)
+    autoPlayTimer = null
+  }
+})
 </script>
 
 <template>
