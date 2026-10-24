@@ -1,88 +1,200 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
-import OpeningHero from '@/components/OpeningHero.vue'
-import PhotoGallery from '@/components/PhotoGallery.vue'
-import LoveLetter from '@/components/LoveLetter.vue'
-import FinalMessage from '@/components/FinalMessage.vue'
-import AudioPlayer from '@/components/AudioPlayer.vue'
-import RomanticParticles from '@/components/RomanticParticles.vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import PixelHeartBackground from '@/components/PixelHeartBackground.vue'
+import PixelClawMachine from '@/components/PixelClawMachine.vue'
+import PrizeRevealModal from '@/components/PrizeRevealModal.vue'
+import PixelLoveLetterModal from '@/components/PixelLoveLetterModal.vue'
+import { clawConfig } from '@/config/clawConfig'
+import { useClawMachine, type ClawDirection } from '@/composables/useClawMachine'
 import { useAudioPlayer } from '@/composables/useAudioPlayer'
+import type { ClawPrize } from '@/types/claw'
+import { isSfxMuted, setSfxMuted } from '@/utils/pixelAudio'
 
-const { startPlayback, isPlaying } = useAudioPlayer()
+const {
+  turnsLeft,
+  caughtIndex,
+  clawX,
+  clawZ,
+  phase,
+  boxes,
+  nearestBox,
+  activeBox,
+  activePrize,
+  caughtHistory,
+  lastTurnDelta,
+  turnDeltaTick,
+  isEnvelopeVisible,
+  isLetterOpen,
+  moveClaw,
+  startGrab,
+  completeGrabAnimation,
+  closePrizeModal,
+  openLoveLetter,
+  closeLoveLetter,
+  resetGame,
+} = useClawMachine(clawConfig)
+
+const { startPlayback, togglePlay, isPlaying } = useAudioPlayer()
+const muted = ref(isSfxMuted())
+const replayModalPrize = ref<ClawPrize | null>(null)
+
+const displayedModalPrize = computed<ClawPrize | null>(() => {
+  if (phase.value === 'modal' && activePrize.value) {
+    return activePrize.value
+  }
+  return replayModalPrize.value
+})
+
+const isReplayModal = computed(() => Boolean(replayModalPrize.value && phase.value !== 'modal'))
+
+function handleMove(direction: ClawDirection) {
+  moveClaw(direction)
+}
+
+function handleGrab() {
+  startGrab()
+}
+
+function handleGrabAnimationComplete() {
+  completeGrabAnimation()
+}
+
+function handleModalClose() {
+  if (replayModalPrize.value && phase.value !== 'modal') {
+    replayModalPrize.value = null
+    return
+  }
+  closePrizeModal()
+}
+
+function handleSelectHistoryPrize(prize: ClawPrize) {
+  if (phase.value === 'grabbing') return
+  replayModalPrize.value = prize
+}
+
+function handleToggleSound() {
+  const nextMuted = !muted.value
+  muted.value = nextMuted
+  setSfxMuted(nextMuted)
+  togglePlay()
+}
 
 let autoPlayTimer: ReturnType<typeof setTimeout> | null = null
 
-function onExperienceStart() {
-  console.log('Romantic experience started.')
-}
-
 onMounted(() => {
-  // Autoplay background music after 1s (User requirement)
   autoPlayTimer = setTimeout(async () => {
-    const success = await startPlayback(true)
-    if (!success) {
-      // If browser policy blocks unprompted audio, resume immediately on very first touch/click
-      const resumeOnInteract = async () => {
-        if (!isPlaying.value) {
+    const ok = await startPlayback(true)
+    if (!ok) {
+      const resumeOnTouch = async () => {
+        if (!isPlaying.value && !muted.value) {
           await startPlayback(false)
         }
-        window.removeEventListener('pointerdown', resumeOnInteract)
-        window.removeEventListener('touchstart', resumeOnInteract)
+        window.removeEventListener('pointerdown', resumeOnTouch)
+        window.removeEventListener('touchstart', resumeOnTouch)
       }
-      window.addEventListener('pointerdown', resumeOnInteract, { once: true, passive: true })
-      window.addEventListener('touchstart', resumeOnInteract, { once: true, passive: true })
+      window.addEventListener('pointerdown', resumeOnTouch, {
+        once: true,
+        passive: true,
+      })
+      window.addEventListener('touchstart', resumeOnTouch, {
+        once: true,
+        passive: true,
+      })
     }
-  }, 1000)
+  }, 600)
 })
 
 onUnmounted(() => {
   if (autoPlayTimer) {
     clearTimeout(autoPlayTimer)
-    autoPlayTimer = null
   }
 })
 </script>
 
 <template>
-  <!-- Mobile-optimized frame wrapper (DEC-015, DEC-036, NFR-001) -->
-  <div class="min-h-[100dvh] bg-warm-100/70 flex justify-center selection:bg-romantic-200">
-    <!-- Floating romantic petals & interactive touch-heart burst canvas -->
-    <RomanticParticles />
+  <div
+    class="relative min-h-[100dvh] w-full flex flex-col items-center justify-between overflow-x-hidden py-1.5"
+  >
+    <!-- Animated Pink Pixel Heart & Sparkle Background -->
+    <PixelHeartBackground />
 
-    <!-- Single-page continuous scroll container (DEC-012, BR-014) -->
-    <main class="w-full max-w-mobile min-h-[100dvh] bg-warm-50 shadow-2xl relative flex flex-col overflow-x-hidden">
-      <!-- Fixed film-grain noise texture overlay (high-end visual design) -->
-      <div class="grain-overlay" aria-hidden="true"></div>
-
-      <!-- Floating Audio Player (FEAT-004) -->
-      <AudioPlayer />
-
-      <!-- Section 1: Opening Experience (FEAT-001) -->
-      <OpeningHero @start="onExperienceStart" />
-
-      <!-- Subtle transition separator 1 -->
-      <div class="w-full flex justify-center py-4" aria-hidden="true">
-        <div class="w-16 h-px bg-gradient-to-r from-transparent via-romantic-200 to-transparent"></div>
+    <!-- Top Compact Mobile Status Bar -->
+    <header
+      class="relative z-20 w-full max-w-[410px] px-3 pt-1 pb-2 flex items-center justify-between gap-2"
+    >
+      <div
+        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fff0f6]/90 border-2 border-[#8c1449] shadow-[0_2px_0_#8c1449]"
+      >
+        <span class="text-xs">🎀</span>
+        <span class="font-pixel text-base leading-none font-bold text-[#8c1449]">
+          Người chơi: {{ clawConfig.recipientName }}
+        </span>
       </div>
 
-      <!-- Section 2: Interactive Photo Gallery (FEAT-002) -->
-      <PhotoGallery />
+      <div class="flex items-center gap-1.5">
+        <!-- Re-open Love Letter button if all 5 gifts are completed -->
+        <button
+          v-if="phase === 'completed'"
+          type="button"
+          class="arcade-btn px-2.5 py-1 rounded-full bg-[#ffe47a] border-2 border-[#8c1449] shadow-[0_2px_0_#8c1449] font-pixel text-sm font-bold text-[#8c1449] flex items-center gap-1"
+          @click="isEnvelopeVisible = true"
+        >
+          <span>💌 Thư</span>
+        </button>
 
-      <!-- Subtle transition separator 2 -->
-      <div class="w-full flex justify-center py-4" aria-hidden="true">
-        <div class="w-16 h-px bg-gradient-to-r from-transparent via-warm-300 to-transparent"></div>
+        <!-- Sound / 8-bit SFX Toggle -->
+        <button
+          type="button"
+          :aria-label="muted ? 'Bật âm thanh' : 'Tắt âm thanh'"
+          class="arcade-btn px-2.5 py-1 rounded-full bg-[#fff0f6]/90 border-2 border-[#8c1449] shadow-[0_2px_0_#8c1449] font-pixel text-sm font-bold text-[#8c1449] flex items-center gap-1"
+          @click="handleToggleSound"
+        >
+          <span>{{ muted ? '🔇 Tắt âm' : '🔊 8-Bit' }}</span>
+        </button>
       </div>
+    </header>
 
-      <!-- Section 3: Love Letter (FEAT-003) -->
-      <LoveLetter />
-
-      <!-- Subtle transition separator 3 -->
-      <div class="w-full flex justify-center py-4" aria-hidden="true">
-        <div class="w-16 h-px bg-gradient-to-r from-transparent via-romantic-200 to-transparent"></div>
-      </div>
-
-      <!-- Section 4: Final Message (FEAT-005) -->
-      <FinalMessage />
+    <!-- Main 2.5D Pixel Claw Machine Cabinet -->
+    <main class="relative z-10 w-full flex-1 flex items-center justify-center">
+      <PixelClawMachine
+        :machine-title="clawConfig.machineTitle"
+        :machine-subtitle="clawConfig.machineSubtitle"
+        :turns-left="turnsLeft"
+        :caught-count="caughtIndex"
+        :total-prizes="clawConfig.prizes.length"
+        :claw-x="clawX"
+        :claw-z="clawZ"
+        :phase="phase"
+        :boxes="boxes"
+        :nearest-box-id="nearestBox?.id ?? null"
+        :active-box="activeBox"
+        :last-turn-delta="lastTurnDelta"
+        :turn-delta-tick="turnDeltaTick"
+        :caught-history="caughtHistory"
+        @move="handleMove"
+        @grab="handleGrab"
+        @grab-animation-complete="handleGrabAnimationComplete"
+        @select-history-prize="handleSelectHistoryPrize"
+      />
     </main>
+
+    <!-- Prize Reveal Modal (with smooth GSAP box-shake & pop-open animation) -->
+    <PrizeRevealModal
+      :prize="displayedModalPrize"
+      :turns-left="turnsLeft"
+      :is-replay-view="isReplayModal"
+      @close="handleModalClose"
+    />
+
+    <!-- Final Interactive Pixel Love Letter Envelope & Unfolded Message -->
+    <PixelLoveLetterModal
+      :visible="isEnvelopeVisible"
+      :is-letter-open="isLetterOpen"
+      :letter="clawConfig.loveLetter"
+      :caught-prizes="caughtHistory"
+      @open-letter="openLoveLetter"
+      @close-letter="closeLoveLetter"
+      @replay-game="resetGame"
+    />
   </div>
 </template>
