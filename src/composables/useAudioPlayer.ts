@@ -1,20 +1,26 @@
 import { ref, readonly } from 'vue'
-import { giftConfig } from '@/config/giftData'
+import { clawConfig } from '@/config/clawConfig'
 
 const isPlaying = ref(false)
 const isLoaded = ref(false)
 const hasError = ref(false)
 const errorMessage = ref('')
 const isUserInitiated = ref(false)
+const volume = ref(0.7)
 
 let audioElement: HTMLAudioElement | null = null
+
+function clampVolume(val: number): number {
+  return Math.min(1, Math.max(0, Number(val.toFixed(2))))
+}
 
 function initAudio() {
   if (typeof window === 'undefined' || audioElement) return
 
-  audioElement = new Audio(giftConfig.audio.src)
-  audioElement.loop = giftConfig.audio.loop ?? true
+  audioElement = new Audio(clawConfig.audio.src)
+  audioElement.loop = clawConfig.audio.loop ?? true
   audioElement.preload = 'auto'
+  audioElement.volume = volume.value
 
   audioElement.addEventListener('canplaythrough', () => {
     isLoaded.value = true
@@ -37,12 +43,25 @@ function initAudio() {
   })
 }
 
+function setVolume(nextVolume: number) {
+  volume.value = clampVolume(nextVolume)
+  if (audioElement) {
+    audioElement.volume = volume.value
+  }
+}
+
+function changeVolume(delta: number): number {
+  setVolume(volume.value + delta)
+  return volume.value
+}
+
 async function startPlayback(isAutoAttempt: boolean = false): Promise<boolean> {
   initAudio()
   isUserInitiated.value = true
   if (!audioElement) return false
 
   try {
+    audioElement.volume = volume.value
     await audioElement.play()
     isPlaying.value = true
     hasError.value = false
@@ -65,6 +84,7 @@ function togglePlay() {
   if (isPlaying.value) {
     audioElement.pause()
   } else {
+    audioElement.volume = volume.value
     audioElement.play().catch((err) => {
       hasError.value = true
       errorMessage.value = 'Không thể phát nhạc. Vui lòng thử lại sau.'
@@ -84,6 +104,9 @@ export function useAudioPlayer() {
     hasError: readonly(hasError),
     errorMessage: readonly(errorMessage),
     isUserInitiated: readonly(isUserInitiated),
+    volume: readonly(volume),
+    setVolume,
+    changeVolume,
     startPlayback,
     togglePlay,
     dismissError,

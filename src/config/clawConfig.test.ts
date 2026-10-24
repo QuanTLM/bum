@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { clawConfig } from './clawConfig'
+import { getSfxVolume, setSfxVolume } from '@/utils/pixelAudio'
+import { useAudioPlayer } from '@/composables/useAudioPlayer'
 
 describe('clawConfig', () => {
   it('starts with 5 initial turns and 15 pixel gift boxes inside the machine', () => {
+    expect(clawConfig.machineSubtitle).toBe('Tiệm gắp quà trái tim')
     expect(clawConfig.initialTurns).toBe(5)
     expect(clawConfig.giftBoxes).toHaveLength(15)
 
@@ -46,5 +49,27 @@ describe('clawConfig', () => {
     expect(clawConfig.loveLetter.greeting.length).toBeGreaterThan(0)
     expect(clawConfig.loveLetter.paragraphs.length).toBeGreaterThanOrEqual(2)
     expect(clawConfig.loveLetter.signature.length).toBeGreaterThan(0)
+  })
+
+  it('supports volume up/down clamping between 0 and 1 for both music and 8-bit SFX', () => {
+    const player = useAudioPlayer()
+    player.setVolume(0.7)
+    expect(player.volume.value).toBeCloseTo(0.7)
+
+    player.changeVolume(0.2)
+    expect(player.volume.value).toBeCloseTo(0.9)
+
+    player.changeVolume(0.5)
+    expect(player.volume.value).toBe(1)
+
+    player.changeVolume(-1.5)
+    expect(player.volume.value).toBe(0)
+
+    setSfxVolume(0.4)
+    expect(getSfxVolume()).toBeCloseTo(0.4)
+    setSfxVolume(2)
+    expect(getSfxVolume()).toBe(1)
+    setSfxVolume(-1)
+    expect(getSfxVolume()).toBe(0)
   })
 })

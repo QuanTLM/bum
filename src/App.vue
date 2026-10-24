@@ -8,7 +8,12 @@ import { clawConfig } from '@/config/clawConfig'
 import { useClawMachine, type ClawDirection } from '@/composables/useClawMachine'
 import { useAudioPlayer } from '@/composables/useAudioPlayer'
 import type { ClawPrize } from '@/types/claw'
-import { isSfxMuted, setSfxMuted } from '@/utils/pixelAudio'
+import {
+  isSfxMuted,
+  playMoveTick,
+  setSfxMuted,
+  setSfxVolume,
+} from '@/utils/pixelAudio'
 
 const {
   turnsLeft,
@@ -34,9 +39,22 @@ const {
   resetGame,
 } = useClawMachine(clawConfig)
 
-const { startPlayback, togglePlay, isPlaying } = useAudioPlayer()
+const {
+  startPlayback,
+  togglePlay,
+  isPlaying,
+  volume,
+  changeVolume,
+  setVolume,
+} = useAudioPlayer()
+
 const muted = ref(isSfxMuted())
+const previousVolumeBeforeMute = ref(0.7)
 const replayModalPrize = ref<ClawPrize | null>(null)
+
+const volumePercent = computed(() =>
+  muted.value ? 0 : Math.round(volume.value * 100)
+)
 
 const displayedModalPrize = computed<ClawPrize | null>(() => {
   if (phase.value === 'modal' && activePrize.value) {
@@ -45,7 +63,9 @@ const displayedModalPrize = computed<ClawPrize | null>(() => {
   return replayModalPrize.value
 })
 
-const isReplayModal = computed(() => Boolean(replayModalPrize.value && phase.value !== 'modal'))
+const isReplayModal = computed(() =>
+  Boolean(replayModalPrize.value && phase.value !== 'modal')
+)
 
 function handleMove(direction: ClawDirection) {
   moveClaw(direction)
@@ -76,12 +96,53 @@ function handleToggleSound() {
   const nextMuted = !muted.value
   muted.value = nextMuted
   setSfxMuted(nextMuted)
-  togglePlay()
+
+  if (nextMuted) {
+    previousVolumeBeforeMute.value = volume.value > 0 ? volume.value : 0.7
+    if (isPlaying.value) {
+      togglePlay()
+    }
+  } else {
+    const restored =
+      volume.value > 0 ? volume.value : previousVolumeBeforeMute.value
+    setVolume(restored)
+    setSfxVolume(restored)
+    if (!isPlaying.value) {
+      startPlayback(false)
+    }
+    playMoveTick()
+  }
+}
+
+function handleVolumeStep(delta: number) {
+  if (muted.value && delta > 0) {
+    muted.value = false
+    setSfxMuted(false)
+  }
+
+  const nextVol = changeVolume(delta)
+  setSfxVolume(nextVol)
+
+  if (nextVol <= 0) {
+    muted.value = true
+    setSfxMuted(true)
+    if (isPlaying.value) {
+      togglePlay()
+    }
+  } else {
+    muted.value = false
+    setSfxMuted(false)
+    if (!isPlaying.value) {
+      startPlayback(false)
+    }
+    playMoveTick()
+  }
 }
 
 let autoPlayTimer: ReturnType<typeof setTimeout> | null = null
 
 onMounted(() => {
+  setSfxVolume(volume.value)
   autoPlayTimer = setTimeout(async () => {
     const ok = await startPlayback(true)
     if (!ok) {
@@ -118,16 +179,16 @@ onUnmounted(() => {
     <!-- Animated Pink Pixel Heart & Sparkle Background -->
     <PixelHeartBackground />
 
-    <!-- Top Compact Mobile Status Bar -->
+    <!-- Top Compact Mobile Status Bar with Volume Controls -->
     <header
-      class="relative z-20 w-full max-w-[410px] px-3 pt-1 pb-2 flex items-center justify-between gap-2"
+      class="relative z-20 w-full max-w-[410px] px-2.5 pt-1 pb-2 flex items-center justify-between gap-1.5"
     >
       <div
-        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fff0f6]/90 border-2 border-[#8c1449] shadow-[0_2px_0_#8c1449]"
+        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#fff0f6]/95 border-2 border-[#8c1449] shadow-[0_2px_0_#8c1449] shrink-0"
       >
         <span class="text-xs">🎀</span>
         <span class="font-pixel text-base leading-none font-bold text-[#8c1449]">
-          Người chơi: {{ clawConfig.recipientName }}
+          {{ clawConfig.recipientName }}
         </span>
       </div>
 
@@ -136,21 +197,65 @@ onUnmounted(() => {
         <button
           v-if="phase === 'completed'"
           type="button"
-          class="arcade-btn px-2.5 py-1 rounded-full bg-[#ffe47a] border-2 border-[#8c1449] shadow-[0_2px_0_#8c1449] font-pixel text-sm font-bold text-[#8c1449] flex items-center gap-1"
+          class="arcade-btn px-2 py-1 rounded-full bg-[#ffe47a] border-2 border-[#8c1449] shadow-[0_2px_0_#8c1449] font-pixel text-sm font-bold text-[#8c1449] flex items-center gap-1"
           @click="isEnvelopeVisible = true"
         >
           <span>💌 Thư</span>
         </button>
 
-        <!-- Sound / 8-bit SFX Toggle -->
-        <button
-          type="button"
-          :aria-label="muted ? 'Bật âm thanh' : 'Tắt âm thanh'"
-          class="arcade-btn px-2.5 py-1 rounded-full bg-[#fff0f6]/90 border-2 border-[#8c1449] shadow-[0_2px_0_#8c1449] font-pixel text-sm font-bold text-[#8c1449] flex items-center gap-1"
-          @click="handleToggleSound"
+        <!-- Pixel Volume Control Capsule (- / % / + & Mute) -->
+        <div
+          class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#fff0f6]/95 border-2 border-[#8c1449] shadow-[0_2px_0_#8c1449]"
+          role="group"
+          aria-label="Điều chỉnh âm lượng"
         >
-          <span>{{ muted ? '🔇 Tắt âm' : '🔊 8-Bit' }}</span>
-        </button>
+          <!-- Mute / Unmute Toggle -->
+          <button
+            type="button"
+            :aria-label="muted ? 'Bật âm thanh' : 'Tắt âm thanh'"
+            class="arcade-btn w-6 h-6 rounded-full bg-[#ffd6e7] border border-[#8c1449] flex items-center justify-center text-xs"
+            @click="handleToggleSound"
+          >
+            <span>
+              {{
+                muted || volumePercent === 0
+                  ? '🔇'
+                  : volumePercent < 50
+                    ? '🔉'
+                    : '🔊'
+              }}
+            </span>
+          </button>
+
+          <!-- Volume Down (-) -->
+          <button
+            type="button"
+            aria-label="Giảm âm lượng"
+            :disabled="muted || volumePercent <= 0"
+            class="arcade-btn w-6 h-6 rounded-full bg-[#ff7eb6] text-white border border-[#8c1449] font-pixel text-base leading-none font-bold flex items-center justify-center disabled:opacity-40"
+            @click="handleVolumeStep(-0.1)"
+          >
+            -
+          </button>
+
+          <!-- Volume Percentage Readout -->
+          <span
+            class="font-pixel text-sm leading-none font-bold text-[#8c1449] min-w-[34px] text-center"
+          >
+            {{ volumePercent }}%
+          </span>
+
+          <!-- Volume Up (+) -->
+          <button
+            type="button"
+            aria-label="Tăng âm lượng"
+            :disabled="!muted && volumePercent >= 100"
+            class="arcade-btn w-6 h-6 rounded-full bg-[#ff4d94] text-white border border-[#8c1449] font-pixel text-base leading-none font-bold flex items-center justify-center disabled:opacity-40"
+            @click="handleVolumeStep(0.1)"
+          >
+            +
+          </button>
+        </div>
       </div>
     </header>
 

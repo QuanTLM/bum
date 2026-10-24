@@ -12,7 +12,7 @@ export const clawConfig: ClawMachineConfig = {
   recipientName: 'Bé Bum',
   senderName: 'Anh Quân',
   machineTitle: 'LOVE CLAW 8-BIT',
-  machineSubtitle: 'Tiệm Gắp Quà Trái Tim Của Anh Quân 💖',
+  machineSubtitle: 'Tiệm gắp quà trái tim',
   initialTurns: 5,
 
   // --- KỊCH BẢN 5 MÓN QUÀ THEO ĐÚNG THỨ TỰ LƯỢT GẮP (5 -> 4 -> 2 -> 1 -> 1 -> 0) ---

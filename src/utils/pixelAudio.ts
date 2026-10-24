@@ -5,9 +5,14 @@
 
 let audioCtx: AudioContext | null = null
 let sfxMuted = false
+let sfxVolume = 0.7
+
+function clampVolume(val: number): number {
+  return Math.min(1, Math.max(0, Number(val.toFixed(2))))
+}
 
 function getAudioContext(): AudioContext | null {
-  if (sfxMuted || typeof window === 'undefined') return null
+  if (sfxMuted || sfxVolume <= 0 || typeof window === 'undefined') return null
   const Ctx =
     window.AudioContext ||
     (window as unknown as { webkitAudioContext?: typeof AudioContext })
@@ -27,11 +32,13 @@ function playTone(
   durationSec: number,
   type: OscillatorType = 'square',
   startTimeOffset = 0,
-  volume = 0.06
+  baseVolume = 0.06
 ) {
   try {
     const ctx = getAudioContext()
     if (!ctx) return
+
+    const effectiveVolume = Math.max(0.002, baseVolume * (sfxVolume / 0.7))
 
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
@@ -40,7 +47,7 @@ function playTone(
     osc.type = type
     osc.frequency.setValueAtTime(freq, now)
 
-    gain.gain.setValueAtTime(volume, now)
+    gain.gain.setValueAtTime(effectiveVolume, now)
     gain.gain.exponentialRampToValueAtTime(0.001, now + durationSec)
 
     osc.connect(gain)
@@ -59,6 +66,14 @@ export function setSfxMuted(muted: boolean) {
 
 export function isSfxMuted(): boolean {
   return sfxMuted
+}
+
+export function setSfxVolume(level: number) {
+  sfxVolume = clampVolume(level)
+}
+
+export function getSfxVolume(): number {
+  return sfxVolume
 }
 
 export function playMoveTick() {
