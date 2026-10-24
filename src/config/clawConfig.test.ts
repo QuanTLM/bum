@@ -24,6 +24,8 @@ describe('clawConfig', () => {
     expect(p1.order).toBe(1)
     expect(p1.kind).toBe('gift')
     expect(p1.turnDelta).toBe(0)
+    expect(p1.title).toBe('Son Watery Tint Colorkey')
+    expect(p1.imageUrl).toBe('/photos/qua1.webp')
 
     expect(p2.order).toBe(2)
     expect(p2.kind).toBe('kiss_penalty')
@@ -33,6 +35,8 @@ describe('clawConfig', () => {
     expect(p3.order).toBe(3)
     expect(p3.kind).toBe('gift')
     expect(p3.turnDelta).toBe(0)
+    expect(p3.title).toBe('Son Velvet COLORKEY')
+    expect(p3.imageUrl).toBe('/photos/qua3.webp')
 
     expect(p4.order).toBe(4)
     expect(p4.kind).toBe('kiss_bonus')
@@ -42,6 +46,8 @@ describe('clawConfig', () => {
     expect(p5.order).toBe(5)
     expect(p5.kind).toBe('gift')
     expect(p5.turnDelta).toBe(0)
+    expect(p5.title).toBe('Phấn Mắt GOGO TALES')
+    expect(p5.imageUrl).toBe('/photos/qua5.webp')
   })
 
   it('includes a complete love letter configuration for the final reveal', () => {
