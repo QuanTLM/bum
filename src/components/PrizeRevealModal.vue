@@ -314,17 +314,17 @@ onBeforeUnmount(() => {
                     </svg>
                   </motion.div>
                   <div class="mt-2 font-pixel text-2xl text-[#8c1449] font-bold">
-                    CHU MỎ LÊN NÀO! 💋
+                    THƠM MÁ ANH QUÂN! 💋
                   </div>
                   <div
                     class="mt-1 px-2.5 py-0.5 rounded-full bg-[#8c1449] text-[#ffe47a] font-pixel text-sm"
                   >
-                    Thơm 1 cái + Trừ 1 lượt!
+                    Thơm má 1 cái + Trừ 1 lượt!
                   </div>
                 </div>
               </template>
 
-              <!-- Case C: Kiss Bonus (+1 Turn: Được anh Quân thơm 1 cái) -->
+              <!-- Case C: Kiss Bonus (+1 Turn: Được anh Quân thơm má 1 cái) -->
               <template v-else>
                 <div
                   class="aspect-square w-full rounded-xl bg-gradient-to-b from-[#fff3b0] via-[#ffd6e7] to-[#ff9ec7] border-2 border-[#ff4d94] flex flex-col items-center justify-center p-3 relative overflow-hidden"
@@ -349,12 +349,12 @@ onBeforeUnmount(() => {
                     </svg>
                   </motion.div>
                   <div class="mt-2 font-pixel text-2xl text-[#8c1449] font-bold">
-                    ANH QUÂN THƠM EM 😘
+                    ANH QUÂN THƠM MÁ EM 😘
                   </div>
                   <div
                     class="mt-1 px-2.5 py-0.5 rounded-full bg-[#0b5e36] text-[#b8ffda] font-pixel text-sm"
                   >
-                    +1 Lượt gắp cứu nguy!
+                    Thơm má + Cộng 1 lượt!
                   </div>
                 </div>
               </template>

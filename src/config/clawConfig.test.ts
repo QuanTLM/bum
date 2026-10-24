@@ -30,7 +30,7 @@ describe('clawConfig', () => {
     expect(p2.order).toBe(2)
     expect(p2.kind).toBe('kiss_penalty')
     expect(p2.turnDelta).toBe(-1)
-    expect(p2.title.toLowerCase()).toContain('thơm anh quân')
+    expect(p2.title.toLowerCase()).toContain('thơm má anh quân')
 
     expect(p3.order).toBe(3)
     expect(p3.kind).toBe('gift')
@@ -41,7 +41,7 @@ describe('clawConfig', () => {
     expect(p4.order).toBe(4)
     expect(p4.kind).toBe('kiss_bonus')
     expect(p4.turnDelta).toBe(1)
-    expect(p4.title.toLowerCase()).toContain('anh quân thơm')
+    expect(p4.title.toLowerCase()).toContain('anh quân thơm má')
 
     expect(p5.order).toBe(5)
     expect(p5.kind).toBe('gift')
