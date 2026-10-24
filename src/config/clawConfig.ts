@@ -250,9 +250,9 @@ export const clawConfig: ClawMachineConfig = {
     title: 'Gửi Bé Bum Của Anh 💖',
     greeting: 'Chào em,',
     paragraphs: [
-      'Cảm ơn em đã đến bên anh, đưa màn hình đây nhận quà và nhận thơm má từ anh Quân nhé! 💕',
+      'Cảm ơn em đã đến bên anh, làm cuộc sống của anh trở nên tươi sáng và vui vẻ hơn rất nhiều. Anh mong tụi mình sẽ tiếp tục mang lại cho nhau thật nhiều sự quan tâm và yêu thương 💕',
     ],
-    signature: '— Anh Quân 💕',
+    signature: '— Thằng già 💕',
     dateNote: 'Gửi ngàn trái tim đến em',
   },
 
