@@ -246,16 +246,14 @@ export const clawConfig: ClawMachineConfig = {
   // --- BỨC THƯ TÂM SỰ HIỆN RA SAU KHI ĐÓNG MODAL MÓN QUÀ CUỐI CÙNG ---
   loveLetter: {
     envelopeBadge: 'Mật thư từ Anh Quân 💌',
-    envelopePrompt: 'Chạm vào phong bì trái tim để mở lời nhắn nhé!',
-    title: 'Gửi Cô Gái Nhỏ Của Anh 💖',
-    greeting: 'Chào em, cô gái vừa "phá đảo" chiếc máy gắp quà này,',
+    envelopePrompt: 'Chạm vào phong bì trái tim để mở thư nhé!',
+    title: 'Gửi Bé Bum Của Anh 💖',
+    greeting: 'Chào em,',
     paragraphs: [
-      'Anh đã chuẩn bị chiếc máy gắp quà pixel màu hồng này với 15 hộp quà nhỏ, nhưng thật ra dù em có điều khiển cần gắp đi đâu thì mọi phần thưởng ngọt ngào nhất cũng đều đã được định sẵn là dành riêng cho em.',
-      'Từ những món quà bất ngờ, những cái thơm "phạt yêu" lấy đi 1 lượt cho hồi hộp, đến lượt cộng thêm vào phút chót — anh chỉ muốn nhìn thấy nụ cười rạng rỡ của em qua từng lần mở hộp.',
-      'Cảm ơn em vì đã luôn đáng yêu và mang đến thật nhiều niềm vui mỗi ngày. Bây giờ thì đưa màn hình này cho anh Quân để nhận đủ cả quà thật lẫn những cái thơm vừa trúng thưởng nhé!',
+      'Cảm ơn em đã đến bên anh, đưa màn hình đây nhận quà và nhận thơm má từ anh Quân nhé! 💕',
     ],
-    signature: 'Thương em thật nhiều — Anh Quân 💕',
-    dateNote: 'Gửi ngàn trái tim pixel đến em',
+    signature: '— Anh Quân 💕',
+    dateNote: 'Gửi ngàn trái tim đến em',
   },
 
   // --- NHẠC NỀN ---

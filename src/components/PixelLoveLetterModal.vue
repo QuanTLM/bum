@@ -8,7 +8,7 @@ const props = defineProps<{
   visible: boolean
   isLetterOpen: boolean
   letter: ClawLoveLetterConfig
-  caughtPrizes: ClawPrize[]
+  caughtPrizes?: ClawPrize[]
 }>()
 
 const emit = defineEmits<{
@@ -16,6 +16,15 @@ const emit = defineEmits<{
   (e: 'closeLetter'): void
   (e: 'replayGame'): void
 }>()
+
+const floatingHearts = [
+  { id: 1, icon: '💖', tx: -85, ty: -145, rot: -22, delay: 0.25 },
+  { id: 2, icon: '✨', tx: 90, ty: -140, rot: 24, delay: 0.3 },
+  { id: 3, icon: '💕', tx: -42, ty: -165, rot: -14, delay: 0.28 },
+  { id: 4, icon: '💗', tx: 48, ty: -160, rot: 18, delay: 0.32 },
+  { id: 5, icon: '🌸', tx: -108, ty: -85, rot: -30, delay: 0.35 },
+  { id: 6, icon: '✨', tx: 110, ty: -80, rot: 28, delay: 0.34 },
+]
 
 watch(
   () => props.visible,
@@ -28,6 +37,7 @@ watch(
 )
 
 function handleEnvelopeClick() {
+  if (props.isLetterOpen) return
   playLetterOpen()
   emit('openLetter')
 }
@@ -38,7 +48,7 @@ function handleEnvelopeClick() {
     <motion.div
       v-if="visible"
       key="love-letter-overlay"
-      class="fixed inset-0 z-50 flex items-center justify-center px-4 py-5 bg-[#3d0820]/75 backdrop-blur-md"
+      class="fixed inset-0 z-50 flex flex-col items-center justify-center px-4 py-5 bg-[#3d0820]/80 backdrop-blur-md select-none"
       role="dialog"
       aria-modal="true"
       :aria-label="letter.title"
@@ -47,200 +57,244 @@ function handleEnvelopeClick() {
       :exit="{ opacity: 0 }"
       :transition="{ duration: 0.25 }"
     >
-      <AnimatePresence mode="wait">
-        <!-- ==================== STATE 1: SEALED PIXEL LOVE ENVELOPE ==================== -->
+      <!-- Main Container -->
+      <motion.div
+        class="relative z-10 w-full max-w-[350px] flex flex-col items-center"
+        :initial="{ opacity: 0, scale: 0.55, y: 50 }"
+        :animate="{ opacity: 1, scale: 1, y: 0 }"
+        :exit="{ opacity: 0, scale: 0.75, y: 30 }"
+        :transition="{ type: 'spring', stiffness: 320, damping: 22 }"
+      >
+        <!-- Top Floating Badge (fades out softly when letter slides up) -->
         <motion.div
-          v-if="!isLetterOpen"
-          key="envelope-sealed"
-          class="relative z-10 flex flex-col items-center text-center max-w-[350px] w-full"
-          :initial="{ opacity: 0, scale: 0.45, y: 55, rotate: -6 }"
-          :animate="{ opacity: 1, scale: 1, y: 0, rotate: 0 }"
-          :exit="{ opacity: 0, scale: 1.25, y: -30, rotate: 4 }"
-          :transition="{ type: 'spring', stiffness: 340, damping: 20 }"
+          class="mb-3 px-4 py-1 rounded-full bg-[#ffe47a] border-2 border-[#8c1449] shadow-[0_3px_0_#8c1449] font-pixel text-lg font-bold text-[#8c1449]"
+          :animate="
+            isLetterOpen
+              ? { opacity: 0, y: -20, scale: 0.85 }
+              : { opacity: 1, y: [0, -5, 0], scale: 1 }
+          "
+          :transition="
+            isLetterOpen
+              ? { duration: 0.2 }
+              : { y: { duration: 1.8, repeat: Infinity, ease: 'easeInOut' } }
+          "
         >
-          <!-- Top Floating Badge -->
-          <motion.div
-            class="mb-4 px-4 py-1 rounded-full bg-[#ffe47a] border-2 border-[#8c1449] shadow-[0_3px_0_#8c1449] font-pixel text-lg font-bold text-[#8c1449]"
-            :animate="{ y: [0, -5, 0] }"
-            :transition="{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }"
-          >
-            {{ letter.envelopeBadge }}
-          </motion.div>
-
-          <!-- Clickable Pixel Art Envelope -->
-          <motion.button
-            type="button"
-            aria-label="Mở bức thư tình yêu"
-            class="group relative p-5 rounded-3xl bg-gradient-to-b from-[#fff5f9] to-[#ffc2dc] border-4 border-[#8c1449] shadow-[0_10px_0_#8c1449] cursor-pointer"
-            :animate="{ y: [0, -6, 0], rotate: [-1.5, 1.5, -1.5] }"
-            :while-hover="{ scale: 1.06 }"
-            :while-tap="{ scale: 0.93 }"
-            :transition="{
-              y: { duration: 2.2, repeat: Infinity, ease: 'easeInOut' },
-              rotate: { duration: 2.6, repeat: Infinity, ease: 'easeInOut' },
-              default: { type: 'spring', stiffness: 400, damping: 20 },
-            }"
-            @click="handleEnvelopeClick"
-          >
-            <!-- Glowing Halo -->
-            <div
-              class="absolute -inset-3 rounded-3xl bg-pink-400/30 blur-xl animate-pulse pointer-events-none"
-            />
-
-            <!-- Crisp Pixel Envelope SVG -->
-            <svg
-              width="190"
-              height="136"
-              viewBox="0 0 28 20"
-              shape-rendering="crispEdges"
-              class="relative z-10 mx-auto drop-shadow-[0_4px_0_rgba(140,20,73,0.3)]"
-            >
-              <rect x="1" y="2" width="26" height="17" fill="#8c1449" />
-              <rect x="2" y="3" width="24" height="15" fill="#fff0f6" />
-              <path d="M2 15h24v3H2v-3z" fill="#ffd6e7" />
-              <path
-                d="M2 4h2v1h2v1h2v1h2v1h8V7h2V6h2V5h2V4h2v2h-2v1h-2v1h-2v1h-2v1h-8V9H8V8H6V7H4V6H2V4z"
-                fill="#ff85b3"
-              />
-              <path
-                d="M3 3h22v2h-2v1h-2v1h-2v1h-2v1h-6V8H9V7H7V6H5V5H3V3z"
-                fill="#ffc2dc"
-              />
-              <path
-                d="M11 7h2v1h2V7h2v1h1v3h-1v1h-1v1h-1v1h-2v-1h-1v-1h-1v-1h-1V8h1V7z"
-                fill="#8c1449"
-              />
-              <path
-                d="M11 8h2v1h2V8h2v2h-1v1h-1v1h-2v-1h-1v-1h-1V8z"
-                fill="#ff2e7e"
-              />
-              <rect x="11" y="8" width="1" height="1" fill="#ffffff" />
-            </svg>
-
-            <!-- Prompt inside button -->
-            <div
-              class="relative z-10 mt-3 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-xl bg-[#ff2e7e] text-white font-pixel text-lg tracking-wide shadow-[0_2px_0_#8c1449]"
-            >
-              <span>💌 BẤM VÀO ĐỂ MỞ THƯ</span>
-            </div>
-          </motion.button>
-
-          <p class="mt-4 font-sans text-sm font-bold text-pink-100 drop-shadow">
-            {{ letter.envelopePrompt }}
-          </p>
+          {{ letter.envelopeBadge }}
         </motion.div>
 
-        <!-- ==================== STATE 2: UNFOLDED LOVE LETTER MODAL ==================== -->
-        <motion.div
-          v-else
-          key="envelope-opened"
-          class="relative z-10 w-full max-w-[390px] max-h-[88dvh] flex flex-col bg-gradient-to-b from-[#fff9fb] via-[#fff0f6] to-[#ffd9e8] border-4 border-[#8c1449] rounded-3xl p-4 sm:p-5 shadow-[0_10px_0_#8c1449] overflow-hidden"
-          :initial="{ opacity: 0, scale: 0.65, y: 45 }"
-          :animate="{ opacity: 1, scale: 1, y: 0 }"
-          :exit="{ opacity: 0, scale: 0.8, y: 25 }"
-          :transition="{ type: 'spring', stiffness: 340, damping: 23 }"
+        <!-- ==================== INTERACTIVE ENVELOPE + SLIDING LETTER STAGE ==================== -->
+        <!-- Extra top margin gives room for the open flap and rising letter -->
+        <div
+          class="relative w-[316px] h-[210px] mt-24 flex items-end justify-center"
+          :class="!isLetterOpen ? 'cursor-pointer' : ''"
+          style="perspective: 900px"
+          @click="handleEnvelopeClick"
         >
-          <!-- Decorative Stationary Header -->
+          <!-- Glowing Pink Aura Behind Envelope -->
           <div
-            class="flex items-center justify-between border-b-2 border-dashed border-[#ff85b3] pb-2.5"
+            class="absolute -inset-4 rounded-3xl bg-pink-400/30 blur-2xl animate-pulse pointer-events-none"
+          />
+
+          <!-- Bursting Hearts When Flap Opens & Letter Slides Out -->
+          <div
+            v-if="isLetterOpen"
+            class="absolute left-1/2 top-1/3 -translate-x-1/2 pointer-events-none z-40"
           >
-            <div class="flex items-center gap-2">
-              <span class="text-xl">💌</span>
-              <h2 class="font-pixel text-2xl leading-none font-bold text-[#8c1449]">
+            <motion.span
+              v-for="h in floatingHearts"
+              :key="h.id"
+              class="absolute left-0 top-0 text-xl"
+              :initial="{ x: 0, y: 0, scale: 0, opacity: 1 }"
+              :animate="{
+                x: h.tx,
+                y: h.ty,
+                scale: [0, 1.3, 0.9],
+                rotate: h.rot,
+                opacity: [1, 1, 0],
+              }"
+              :transition="{ duration: 0.95, delay: h.delay, ease: 'easeOut' }"
+            >
+              {{ h.icon }}
+            </motion.span>
+          </div>
+
+          <!-- 1. ENVELOPE BACK WALL (Inside of Pocket) -->
+          <div
+            class="absolute inset-0 rounded-2xl bg-[#ff85b3] border-4 border-[#8c1449] shadow-[0_10px_0_#8c1449] z-10"
+          />
+
+          <!-- 2. THE SLIDING LETTER SHEET (Lá thư chạy từ trong phong bì lên) -->
+          <motion.div
+            class="absolute left-3.5 right-3.5 bottom-3 rounded-2xl bg-gradient-to-b from-[#fffdfd] via-[#fff5f9] to-[#ffe6f1] border-4 border-[#8c1449] px-4 py-4 shadow-[0_6px_0_rgba(140,20,73,0.28)] z-20 text-center"
+            :initial="false"
+            :animate="
+              isLetterOpen
+                ? { y: -96, scale: 1, opacity: 1 }
+                : { y: 18, scale: 0.92, opacity: 0 }
+            "
+            :transition="
+              isLetterOpen
+                ? {
+                    type: 'spring',
+                    stiffness: 190,
+                    damping: 19,
+                    delay: 0.28,
+                  }
+                : { duration: 0.22, ease: 'easeIn' }
+            "
+          >
+            <!-- Top Corner Stamp & Title -->
+            <div
+              class="flex items-center justify-center gap-1.5 pb-2 border-b-2 border-dashed border-[#ff9ec7]"
+            >
+              <span class="text-base">💌</span>
+              <h2 class="font-pixel text-xl leading-none font-bold text-[#8c1449]">
                 {{ letter.title }}
               </h2>
             </div>
-            <span
-              class="px-2 py-0.5 rounded-md bg-[#ffe47a] border border-[#8c1449] font-pixel text-xs text-[#8c1449] font-bold"
-            >
-              5/5 MÓN QUÀ
-            </span>
-          </div>
 
-          <!-- Scrollable Letter Content -->
-          <div class="mt-3 overflow-y-auto pr-1 space-y-3 text-left no-scrollbar">
-            <p class="font-sans text-sm font-bold text-[#d92b76]">
-              {{ letter.greeting }}
+            <!-- Single-Line Sweet Message -->
+            <p
+              class="mt-3 font-sans text-sm sm:text-[15px] leading-relaxed font-bold text-[#591234]"
+            >
+              {{ letter.paragraphs[0] }}
             </p>
 
-            <motion.p
-              v-for="(para, index) in letter.paragraphs"
-              :key="`para-${index}`"
-              class="font-sans text-xs sm:text-sm leading-relaxed text-[#591234] font-semibold bg-white/85 rounded-xl p-3 border border-pink-200 shadow-sm"
-              :initial="{ opacity: 0, y: 14 }"
-              :animate="{ opacity: 1, y: 0 }"
-              :transition="{
-                type: 'spring',
-                stiffness: 320,
-                damping: 24,
-                delay: 0.08 * (index + 1),
-              }"
-            >
-              {{ para }}
-            </motion.p>
-
-            <!-- Signature Box -->
-            <div class="pt-1 pb-2 flex flex-col items-end text-right">
-              <p class="font-pixel text-xl font-bold text-[#8c1449]">
+            <!-- Signature -->
+            <div class="mt-2.5 text-right">
+              <span class="font-pixel text-lg font-bold text-[#d92b76]">
                 {{ letter.signature }}
-              </p>
-              <span class="font-sans text-[11px] font-semibold text-[#d92b76]">
-                {{ letter.dateNote }}
               </span>
             </div>
+          </motion.div>
 
-            <!-- Summary of 5 Prizes Caught -->
-            <div class="rounded-2xl bg-[#ffe6f1] border-2 border-[#8c1449] p-2.5">
-              <div class="font-pixel text-sm font-bold text-[#8c1449] mb-1.5 text-center">
-                🎁 TỔNG KẾT 5 PHẦN THƯỞNG CỦA EM 🎁
-              </div>
-              <div class="grid grid-cols-1 gap-1">
-                <div
-                  v-for="prize in caughtPrizes"
-                  :key="prize.id"
-                  class="flex items-center gap-2 bg-white rounded-lg px-2.5 py-1 border border-pink-300 text-xs font-bold text-[#591234]"
-                >
-                  <span>
-                    {{
-                      prize.kind === 'gift'
-                        ? '🎁'
-                        : prize.kind === 'kiss_penalty'
-                          ? '💋'
-                          : '😘'
-                    }}
-                  </span>
-                  <span class="font-pixel text-sm text-[#d92b76] shrink-0">
-                    Món #{{ prize.order }}:
-                  </span>
-                  <span class="truncate">{{ prize.title }}</span>
-                </div>
-              </div>
-            </div>
+          <!-- 3. ENVELOPE FRONT POCKET FOLDS (Covers the bottom of the letter so it emerges from inside) -->
+          <div
+            class="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none z-30 border-4 border-[#8c1449]"
+          >
+            <svg
+              class="w-full h-full"
+              viewBox="0 0 316 210"
+              preserveAspectRatio="none"
+            >
+              <!-- Left Fold Triangle -->
+              <polygon
+                points="0,0 158,115 0,210"
+                fill="#ffd6e7"
+                stroke="#8c1449"
+                stroke-width="4"
+              />
+              <!-- Right Fold Triangle -->
+              <polygon
+                points="316,0 158,115 316,210"
+                fill="#ffc2dc"
+                stroke="#8c1449"
+                stroke-width="4"
+              />
+              <!-- Bottom Pocket Flap -->
+              <polygon
+                points="0,210 158,102 316,210"
+                fill="#fff0f6"
+                stroke="#8c1449"
+                stroke-width="4"
+              />
+            </svg>
           </div>
 
-          <!-- Bottom Action Buttons -->
-          <div class="mt-3 pt-2 border-t-2 border-pink-200 grid grid-cols-2 gap-2">
+          <!-- 4. ENVELOPE TOP FLAP (Flips open 180deg before the letter slides out) -->
+          <motion.div
+            class="absolute top-0 inset-x-0 h-[118px] origin-top pointer-events-none"
+            :style="{ zIndex: isLetterOpen ? 15 : 40 }"
+            :initial="false"
+            :animate="
+              isLetterOpen
+                ? { rotateX: 180 }
+                : { rotateX: 0 }
+            "
+            :transition="{ duration: 0.34, ease: 'easeInOut' }"
+          >
+            <svg
+              class="w-full h-full drop-shadow-[0_3px_0_rgba(140,20,73,0.25)]"
+              viewBox="0 0 316 118"
+              preserveAspectRatio="none"
+            >
+              <polygon
+                points="2,2 314,2 158,112"
+                fill="#ffb3d1"
+                stroke="#8c1449"
+                stroke-width="4"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </motion.div>
+
+          <!-- 5. WAX HEART SEAL + PROMPT (When Sealed) -->
+          <AnimatePresence>
+            <motion.div
+              v-if="!isLetterOpen"
+              key="wax-seal"
+              class="absolute inset-0 z-40 flex flex-col items-center justify-center pt-6 pointer-events-none"
+              :initial="{ scale: 0.8, opacity: 0 }"
+              :animate="{ scale: [1, 1.08, 1], opacity: 1 }"
+              :exit="{ scale: 1.4, opacity: 0 }"
+              :transition="{
+                scale: { duration: 1.4, repeat: Infinity, ease: 'easeInOut' },
+                default: { duration: 0.18 },
+              }"
+            >
+              <!-- Pixel Heart Wax Seal -->
+              <div
+                class="w-14 h-14 rounded-full bg-[#ff2e7e] border-3 border-[#8c1449] shadow-[0_4px_0_#8c1449] flex items-center justify-center"
+              >
+                <span class="text-2xl">💖</span>
+              </div>
+
+              <div
+                class="mt-5 px-3.5 py-1 rounded-xl bg-[#ff2e7e] border-2 border-[#8c1449] text-white font-pixel text-base tracking-wide shadow-[0_3px_0_#8c1449]"
+              >
+                💌 BẤM ĐỂ MỞ PHONG BÌ
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <!-- ==================== BOTTOM CONTROLS ==================== -->
+        <div class="mt-5 w-full">
+          <p
+            v-if="!isLetterOpen"
+            class="font-sans text-sm font-bold text-pink-100 text-center drop-shadow"
+          >
+            {{ letter.envelopePrompt }}
+          </p>
+
+          <motion.div
+            v-else
+            class="grid grid-cols-2 gap-2.5"
+            :initial="{ opacity: 0, y: 12 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :transition="{ delay: 0.45, duration: 0.25 }"
+          >
             <motion.button
               type="button"
-              class="py-2.5 px-3 rounded-xl bg-[#fff0f6] border-2 border-[#8c1449] shadow-[0_3px_0_#8c1449] font-pixel text-base font-bold text-[#8c1449] cursor-pointer"
+              class="py-2.5 px-3 rounded-xl bg-[#fff0f6] border-2 border-[#8c1449] shadow-[0_4px_0_#8c1449] font-pixel text-base font-bold text-[#8c1449] cursor-pointer"
               :while-hover="{ scale: 1.03 }"
               :while-tap="{ scale: 0.95, y: 2 }"
               @click="emit('closeLetter')"
             >
-              GẤP THƯ LẠI 💌
+              ĐÓNG PHONG BÌ 💌
             </motion.button>
             <motion.button
               type="button"
-              class="py-2.5 px-3 rounded-xl bg-gradient-to-b from-[#ff4d94] to-[#d92b76] border-2 border-[#8c1449] shadow-[0_3px_0_#8c1449] font-pixel text-base font-bold text-white cursor-pointer"
+              class="py-2.5 px-3 rounded-xl bg-gradient-to-b from-[#ff4d94] to-[#d92b76] border-2 border-[#8c1449] shadow-[0_4px_0_#8c1449] font-pixel text-base font-bold text-white cursor-pointer"
               :while-hover="{ scale: 1.03 }"
               :while-tap="{ scale: 0.95, y: 2 }"
               @click="emit('replayGame')"
             >
               CHƠI LẠI TỪ ĐẦU 🔄
             </motion.button>
-          </div>
-        </motion.div>
-      </AnimatePresence>
+          </motion.div>
+        </div>
+      </motion.div>
     </motion.div>
   </AnimatePresence>
 </template>

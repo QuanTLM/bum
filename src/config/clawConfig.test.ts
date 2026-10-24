@@ -50,10 +50,9 @@ describe('clawConfig', () => {
     expect(p5.imageUrl).toBe('/photos/qua5.webp')
   })
 
-  it('includes a complete love letter configuration for the final reveal', () => {
+  it('includes a single-line love letter configuration for the final reveal', () => {
     expect(clawConfig.loveLetter.title.length).toBeGreaterThan(0)
-    expect(clawConfig.loveLetter.greeting.length).toBeGreaterThan(0)
-    expect(clawConfig.loveLetter.paragraphs.length).toBeGreaterThanOrEqual(2)
+    expect(clawConfig.loveLetter.paragraphs).toHaveLength(1)
     expect(clawConfig.loveLetter.signature.length).toBeGreaterThan(0)
   })
 
